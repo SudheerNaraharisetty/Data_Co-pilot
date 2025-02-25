@@ -14,8 +14,3 @@ A CLI tool that allows users to dynamically build structured datasets on any top
 - Ollama running locally
 - Required packages: pandas, ollama
 
-<<<<<<< HEAD
-## Usage
-=======
-## Usage
->>>>>>> 0451acd6df92a663372132c606373967b5d79c3c
