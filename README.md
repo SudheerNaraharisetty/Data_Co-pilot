@@ -1,8 +1,6 @@
-## README.md
+# Data_Co-pilot
 
-# Data Co-pilot 
-
-A powerful command-line tool that lets you build structured datasets using natural language requests. The tool leverages local large language models (via Ollama) to generate high-quality tabular data and provides automatic data verification, visualization, and insights.
+A powerful command-line tool that acts as your AI co-pilot for dataset creation using natural language requests. The tool leverages local large language models (via Ollama) to generate high-quality tabular data and provides automatic data verification, visualization, and insights.
 
 ## Features
 
@@ -17,8 +15,8 @@ A powerful command-line tool that lets you build structured datasets using natur
 
 ```bash
 # Clone the repository
-git clone https://github.com/SudheerNaraharisetty/data_Co-pilot.git
-cd dataset-builder
+git clone https://github.com/yourusername/Data_Co-pilot.git
+cd Data_Co-pilot
 
 # Install required dependencies
 pip install pandas ollama matplotlib seaborn numpy
@@ -37,13 +35,13 @@ pip install pandas ollama matplotlib seaborn numpy
 
 ```bash
 # Launch the interactive CLI
-python dataset_builder.py
+python Data_Co-pilot.py
 
 # Specify a request directly from the command line
-python dataset_builder.py --request "list of top 10 tech companies in USA by revenue"
+python Data_Co-pilot.py --request "list of top 10 tech companies in USA by revenue"
 
 # Generate a dataset and immediately create visualizations
-python dataset_builder.py --finalize --visualize
+python Data_Co-pilot.py --finalize --visualize
 ```
 
 ### Example Workflow
@@ -59,7 +57,7 @@ python dataset_builder.py --finalize --visualize
 
 The tool uses a multi-stage pipeline:
 
-1. **Request Analysis**: The tool analyzes your natural language request to understand what data you need
+1. **Request Analysis**: Data_Co-pilot analyzes your natural language request to understand what data you need
 2. **Data Generation**: It queries the local Ollama LLM with specialized prompts to generate high-quality data
 3. **Verification**: Multiple verification layers ensure the data matches expected formats and facts
 4. **Correction**: When issues are detected, the tool can automatically correct the data
@@ -69,7 +67,7 @@ The tool uses a multi-stage pipeline:
 
 ```bash
 # Create a dataset of companies
-python dataset_builder.py
+python Data_Co-pilot.py
 > Enter filename: tech_companies.csv
 > Enter request: List of top 10 tech companies by market cap
 > ... (follow the interactive prompts)
