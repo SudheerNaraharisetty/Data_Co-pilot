@@ -244,4 +244,4 @@ def generate_visualizations(dataset_path: str) -> str:
         return ""
     except Exception as e:
         print(f"\nError generating visualizations: {e}")
-        return ""}
+        return ""
