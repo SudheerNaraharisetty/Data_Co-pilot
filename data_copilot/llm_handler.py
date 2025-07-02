@@ -6,12 +6,12 @@ import json
 import google.generativeai as genai
 from ollama import Client
 from typing import Optional, List, Union
-from .data_processing import extract_numbered_list, parse_response_content
+from .data_processing import parse_response_content, extract_numbered_list
 
 # --- LLM Configuration ---
 try:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+    gemini_model = genai.GenerativeModel('gemini-1.5-pro') # Changed to gemini-1.5-pro
 except KeyError:
     print("CRITICAL: GEMINI_API_KEY environment variable not found.")
     gemini_model = None
@@ -29,19 +29,21 @@ def query_gemini_for_data(prompt: str, is_numeric: bool = False, expected_count:
         return None
     try:
         # Construct a prompt that asks for JSON output
-        full_prompt = f"""Please provide the following data as a JSON object with a single key "data" containing a list of values.
+        full_prompt = f"""You are a data generation assistant. Your task is to provide data in a clean, structured JSON format.
         Request: {prompt}
 
         CRITICAL INSTRUCTIONS:
-        1. Return ONLY a valid JSON object. Do NOT include any other text, explanations, or markdown outside the JSON block.
+        1. Return ONLY a valid JSON object. Do NOT include any conversational text, explanations, or markdown outside the JSON block.
         2. The JSON should have one key: "data".
-        3. The "data" key should contain a list of the requested items.
-        4. If the request is for numeric data, the list should contain numbers.
-        5. If a value is unknown, use "N/A".
+        3. The "data" key should contain a JSON array (list) of the requested items.
+        4. Each item in the list should be a concise string or number, exactly as requested.
+        5. If the request is for numeric data, the list should contain numbers (integers or floats).
+        6. If a value is unknown or cannot be determined, use the string "N/A".
+        7. Ensure the list contains only the requested data points, nothing else.
         """
         
         if expected_count:
-            full_prompt += f"\n6. The list should contain exactly {expected_count} items."
+            full_prompt += f"\n8. The list should contain exactly {expected_count} items. If you cannot find {expected_count} items, fill the rest with "N/A"."
 
         response = gemini_model.generate_content(full_prompt)
         
@@ -79,8 +81,8 @@ def web_search_and_verify(company: str, data_point_request: str) -> str:
     try:
         # Craft a very specific prompt to get a concise answer
         prompt = f"""What is the {data_point_request} for {company}? 
-        Provide ONLY the factual answer, as concisely as possible. 
-        Do NOT include any conversational text, explanations, or disclaimers. 
+        Provide ONLY the factual answer, as concisely as possible, without any additional text, explanations, or disclaimers. 
+        If the answer is a number, provide only the number. 
         If you cannot find the answer, respond with "N/A".
         """
         
@@ -90,7 +92,14 @@ def web_search_and_verify(company: str, data_point_request: str) -> str:
         # Extract the text content, remove any leading/trailing whitespace
         # Post-process to get only the first sentence for extreme conciseness
         text_response = response.text.strip()
-        first_sentence_match = re.match(r'^[^.!?]*[.!?]', text_response)
+        # Attempt to extract a number if the request implies numeric data
+        if any(keyword in data_point_request.lower() for keyword in ["revenue", "sales", "profit", "price", "cost", "amount", "number", "count", "total", "size", "year", "age", "employees", "market cap"]):
+            numeric_match = re.search(r'[\d,.]+', text_response)
+            if numeric_match:
+                return numeric_match.group(0).replace(',', '')
+
+        first_sentence_match = re.match(r'^[^
+.!?]*[.!?]', text_response)
         if first_sentence_match:
             return first_sentence_match.group(0).strip()
         else:

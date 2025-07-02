@@ -3,6 +3,7 @@ import re
 import pandas as pd
 from . import data_manager
 from . import llm_handler
+from .data_processing import parse_response_content # Keep for Ollama path
 
 OUTPUT_CSV: str = ""
 
@@ -67,22 +68,30 @@ def start_session(args):
                     context = "\n".join([f"{i+1}. {item}" for i, item in enumerate(first_column_data)])
             
             if args.use_gemini:
+                # Gemini returns a List directly, no need for parse_response_content here
                 response = llm_handler.query_gemini_for_data(user_request, is_numeric=is_numeric, expected_count=expected_count)
             else:
+                # Ollama returns raw text, so it needs parsing
                 response = llm_handler.query_ollama(user_request, context=context, is_numeric=is_numeric, expected_count=expected_count)
 
             if not response:
                 print("Failed to get data. Try again or check the LLM server.")
                 continue
 
-            if args.verify_web and args.use_gemini and context:
+            if args.verify_web and args.use_gemini and first_column_data:
                 print("\nVerifying data with web search...")
                 verified_response = []
-                for i, item in enumerate(response):
+                # Ensure response and first_column_data have the same length for zipping
+                min_len = min(len(response), len(first_column_data))
+                for i in range(min_len):
+                    item = response[i]
                     company = first_column_data[i]
-                    verified_item = llm_handler.web_search_and_verify(company, f"{user_request} for {company}")
+                    verified_item = llm_handler.web_search_and_verify(company, user_request)
                     print(f"  - {company}: {item} -> {verified_item}")
                     verified_response.append(verified_item)
+                # If the original response was longer, append remaining items as is
+                if len(response) > min_len:
+                    verified_response.extend(response[min_len:])
                 response = verified_response
             
             column_name = llm_handler.suggest_column_name(user_request)
