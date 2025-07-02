@@ -1,7 +1,13 @@
-
 import os
 import pandas as pd
 from typing import List, Any
+import matplotlib.pyplot as plt
+import seaborn as sns
+from matplotlib.figure import Figure
+import base64
+from io import BytesIO
+import numpy as np
+from datetime import datetime
 
 def initialize_dataset(output_csv: str, column_name: str, data: List[str]) -> List[str]:
     """
@@ -63,14 +69,6 @@ def generate_visualizations(dataset_path: str) -> str:
     Generates visualizations based on the dataset and saves them to an HTML file.
     """
     try:
-        import matplotlib.pyplot as plt
-        import seaborn as sns
-        from matplotlib.figure import Figure
-        import base64
-        from io import BytesIO
-        import numpy as np
-        from datetime import datetime
-        
         df = pd.read_csv(dataset_path)
         
         html_content = f"""
@@ -160,13 +158,15 @@ def generate_visualizations(dataset_path: str) -> str:
         if len(df.columns) > 0:
             first_col = df.columns[0]
             
-            if numeric_cols:
-                for num_col in numeric_cols[:3]:
+            # Bar charts for first column vs numeric columns
+            if numeric_cols and not df.empty:
+                for num_col in numeric_cols[:3]:  # Limit to first 3 numeric columns
                     plt.figure(figsize=(10, 6))
-                    if len(df) <= 15:
-                        df.sort_values(num_col, ascending=False).plot(
-                            kind='barh', x=first_col, y=num_col, color='skyblue', legend=False
-                        )
+                    # Filter out non-numeric values for plotting
+                    plot_df = df[[first_col, num_col]].dropna(subset=[num_col])
+                    if not plot_df.empty and len(plot_df) <= 15:  
+                        plot_df = plot_df.sort_values(num_col, ascending=False)
+                        sns.barplot(x=num_col, y=first_col, data=plot_df, palette='viridis')
                         plt.title(f'{num_col} by {first_col}')
                         plt.tight_layout()
                         
@@ -180,13 +180,14 @@ def generate_visualizations(dataset_path: str) -> str:
                             </div>
                         """
             
+            # Distribution plots for numeric columns
             for num_col in numeric_cols:
                 plt.figure(figsize=(10, 6))
                 sns.histplot(df[num_col].dropna(), kde=True)
                 plt.title(f'Distribution of {num_col}')
                 plt.tight_layout()
                 
-                img_.str = fig_to_base64(plt.gcf())
+                img_str = fig_to_base64(plt.gcf())
                 plt.close()
                 
                 html_content += f"""
@@ -196,6 +197,7 @@ def generate_visualizations(dataset_path: str) -> str:
                     </div>
                 """
             
+            # Correlation heatmap
             if len(numeric_cols) >= 2:
                 plt.figure(figsize=(10, 8))
                 correlation_matrix = df[numeric_cols].corr()
@@ -242,4 +244,4 @@ def generate_visualizations(dataset_path: str) -> str:
         return ""
     except Exception as e:
         print(f"\nError generating visualizations: {e}")
-        return ""
+        return ""}
