@@ -1,3 +1,6 @@
 pandas
 ollama
 google-generativeai
+matplotlib
+seaborn
+numpy
